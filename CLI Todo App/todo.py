@@ -59,8 +59,7 @@ def add_todo(todolist):
             for index in range(len(todolist)):
                 task = {'id': index+1, 'todo':todolist[index], 'status':False}
                 todo.append(task)
-        with open(FILENAME, 'w') as fp:
-            json.dump(todo, fp, indent=4)
+        write_todos(todo)
         del todo
     except FileNotFoundError:
         print(f'{FILENAME} not found in the directory.')
