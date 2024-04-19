@@ -103,12 +103,9 @@ def update_todo(todo):
             return False
     except IndexError:
         pass
-        
-def main():
-    parser = get_args_parser()
-    args = parser.parse_args()
-    
-    if args.create:
+
+def resolve_arguments(args):
+        if args.create:
         if add_todo(args.create):
             print('todo successfully saved...')
     elif args.delete:
@@ -127,9 +124,26 @@ def main():
             print(f'todo id = {args.updatetodo} update successfully...')
         else:
             print(f'todo with id = {args.updatetodo} not found...')        
+    elif args.list:
+        print(return_todos())
+    elif args.listcompleted:
+        data = return_todos()
+        todo = filter(lambda x: if x['status'] == True, data)
+        print(todo)
+    elif args.listpending:
+        data = return_todos()
+        todo = filter(lambda x: if x['status'] == False, data)
+        print(todo)
     else:
-        pass
-    
+        print('Please enter valid command')
+
+        
+def main():
+    parser = get_args_parser()
+    args = parser.parse_args()
+    resolve_arguments(args)
+
+
 if __name__ == '__main__':
     get_config()
     
