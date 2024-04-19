@@ -1,5 +1,7 @@
 import configparser
 import argparse
+import os
+import json
 
 def get_config():
     global FILENAME
@@ -20,9 +22,44 @@ def get_args_parser():
     parser.add_argument('-lp', '--listpending', action='store_true', help='display all todos with status False')
     return parser
 
+def add_todo(todolist):
+    todo = None
+    
+    try:
+        if os.path.exists(FILENAME):
+            with open(FILENAME, 'r') as fp:
+                todo = json.load(fp)
+                
+                if todo:
+                    last_todo_id = todo[-1]['id']
+                else:
+                    last_todo_id = 1
+            for index in range(len(todolist)):
+                task = {'id': last_todo_id+index+1, 'todo':todolist[index], 'status':False}
+                todo.append(task)
+        else: 
+            todo = []
+            for index in range(len(todolist)):
+                task = {'id': index+1, 'todo':todolist[index], 'status':False}
+                todo.append(task)
+        with open(FILENAME, 'w') as fp:
+            json.dump(todo, fp, indent=4)
+        del todo
+    except FileNotFoundError:
+        print(f'{FILENAME} not found in the directory.')
+        return False
+    else:
+        return True
+        
 def main():
     parser = get_args_parser()
     args = parser.parse_args()
+    
+    if args.create:
+        if add_todo(args.create):
+            print('todo successfully saved...')
+    else:
+        pass
     
     
 if __name__ == '__main__':
