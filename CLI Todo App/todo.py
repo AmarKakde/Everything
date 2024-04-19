@@ -111,9 +111,24 @@ def main():
     if args.create:
         if add_todo(args.create):
             print('todo successfully saved...')
+    elif args.delete:
+        if delete_todo(args.delete):
+            print(f'todo id = {args.delete} deleted successfully...')
+        else:
+            print(f'todo with id = {args.delete} not found...')
+    elif args.update:
+        if update_todo(args.update):
+            print(f'todo id = {args.update} update successfully...')
+        else:
+            print(f'todo with id = {args.update} not found...')        
+    elif args.updatetodo:
+        print(args.updatetodo)
+        if update_todo(args.updatetodo):
+            print(f'todo id = {args.updatetodo} update successfully...')
+        else:
+            print(f'todo with id = {args.updatetodo} not found...')        
     else:
         pass
-    
     
 if __name__ == '__main__':
     get_config()
