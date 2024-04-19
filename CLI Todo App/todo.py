@@ -66,6 +66,43 @@ def add_todo(todolist):
         return False
     else:
         return True
+
+def delete_todo(id):
+    try:
+        todos = return_todos()
+        token = None
+        for index in range(len(todos)):
+            if todos[index]['id'] == id[0]:
+                token = index
+                break
+        if token is not None:
+            todos.pop(token)
+            write_todos(todos)
+            return True
+        else:
+            return False
+    except IndexError as ie:
+        print(repr(ie))
+
+def update_todo(todo):
+    try:
+        todos = return_todos()
+        token = None
+        print(todo)
+        for index in range(len(todos)):
+            if todos[index]['id'] == int(todo[0]):
+                token = index
+                break
+        if token is not None:
+            todos[token]['status'] = True
+            if len(todo) == 2:
+                todos[token]['todo'] = todo[1]
+            write_todos(todos)
+            return True
+        else:
+            return False
+    except IndexError:
+        pass
         
 def main():
     parser = get_args_parser()
