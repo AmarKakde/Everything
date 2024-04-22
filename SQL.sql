@@ -676,3 +676,374 @@ select Concat('apple', 'aaple1')
 select CONCAT_WS(',', 'apple', 'apple1')
 
 
+--PATINDEX(pattern, string)  returns the index of first occurance of pattern
+Select PATINDEX('%@mail.com', Email) From tbl1
+
+
+--Date Time Functions
+/*
+	Time           :only time
+	Date		   :only date
+	smalldatetime  :date and time without nano second
+	datetime	   :date time with only 3 nano second digit
+	datetime2      :more precision in nano second 6 digit
+	datetimeoffset :datetime2 + timezone offset
+*/
+
+/*
+
+function				Date Time Format
+GetDate()				2024-04-19 03:47:36.987
+Current_timestamp		2024-04-19 03:47:49.147
+SysDateTime()			2024-04-19 03:48:01.4114783
+SysDateTimeOffset()		2024-04-19 03:48:11.5666745 +05:30
+GetUtcDate()			2024-04-18 22:18:24.887
+SysUtcDateTime()		2024-04-18 22:18:34.2492819
+*/
+
+
+--IsDate() returns 1 for time date and datetime, return 0 for other and datetime2
+select ISDATE('John')
+
+Select ISDATE('2024-04-19')
+
+--Day()
+Select Day(GETDATE())
+
+--Month()
+Select Month(GetDate())
+
+-- Year()
+Select Year(GetDate())
+
+--datename
+Select DATENAME(Day, GetDate())
+Select DATENAME(Weekday, GetDate())
+Select DATENAME(Month, GetDate())
+Select DATENAME(DAYOFYEAR, GetDate())
+Select DATENAME(week, GetDate())
+Select DATENAME(quarter, GetDate())
+
+--Datepart
+Select DatePart(Weekday, GetDate())
+Select DATENAME(weekday, GetDate())
+
+--DateADD
+Select DATEADD(Day, 5, Getdate())
+Select DATEADD(week, 1, Getdate())
+Select DateAdd(Month, 2, GetDate())
+Select DATEADD(Year, 1, Getdate())
+
+--DateDiff()
+Select DATEDIFF(Month, '04/19/2024', '09/21/2024')
+Select DATEDIFF(DAY, '04/19/2024', '09/21/2024')
+
+
+--Cast And Convert
+--Caste(variable as DataType)
+--Conver(DataType, Variable[, dateformat])
+/*
+	Date format
+	101 mm/dd/yy
+	102 yy.mm.dd
+	103 dd/mm/yyyy
+
+*/
+
+Select GETDATE()
+Select Cast(GETDATE() as date)
+Select CONVERT(nvarchar, Getdate(), 103)
+
+-- Mathematical Function
+--abs()
+select abs(-23)
+select abs(23.5)
+
+--ceiling()
+select CEILING(23.4)  -- 24
+select ceiling(-23.4) -- -23
+
+--floor
+select FLOOR(23.4) -- 23
+Select floor(-23.4)  -- -24
+
+--power
+select POWER(2,4)
+select power(-3, 3) -- -27
+
+--square
+select SQUARE(4)  -- 16
+
+-- sqrt
+select SQRT(4) -- 2
+select sqrt(15.87)
+ 
+--rand(seed_value)
+select rand()  -- random value between 0 to 1
+select rand(5)  -- gives a fixed random value
+
+--round
+select round(850.556, 2)
+
+Select round(850.556, 2, 1)
+
+-- User Defined Function
+--1.Scalar Function
+/*
+	We can use scalar function in select query
+	may or may not have parameters, but will always return a single(scalar) value
+*/
+
+Create Function fnCalculateAge(@DOB Date)
+Returns Int
+As
+Begin
+	Declare @Age Int
+	Set @Age = DATEDIFF(YEAR, @DOB, GETDATE()) - 
+				Case
+					When (MONTH(@DOB) > MONTH(GETDATE()) OR
+						 (MONTH(@DOB) = MONTH(GETDATE()) AND DAY(@DOB) > DAY(GETDATE())))
+					THEN 1
+					ELSE 0
+				End
+	Return @Age
+End
+ 
+
+Select dbo.fnCalculateAge('11/10/1996')
+
+--Alter Function
+Alter Function fnCalculateAge(@DOB Date)
+Returns Int
+As
+Begin
+	Declare @Age Int
+	Set @Age = DATEDIFF(YEAR, @DOB, GETDATE()) - 
+				Case
+					When (MONTH(@DOB) > MONTH(GETDATE()) OR
+						 (MONTH(@DOB) = MONTH(GETDATE()) AND DAY(@DOB) > DAY(GETDATE())))
+					THEN 1
+					ELSE 0
+				End
+	Return @Age
+End
+
+--Drop Function
+Drop Function fnCalculateAge
+
+-- Inline Table Valued Function
+Select * From tblemp
+
+Create Function fnEmployeesByGender(@Gender nvarchar(20))
+Returns Table
+As
+Return (Select Id, Name, Gender, Salary, DepartmentId
+		From tblemp
+		where Gender=@Gender)
+
+select * from dbo.fnEmployeesByGender('Male')
+
+-- Multi statement Table valued Function
+Select * From tblEmployee
+
+Create Function fnGetEmployee2()
+returns @Table Table (Id int, Name nvarchar(20), Salary int)
+as
+Begin
+	Insert Into @Table
+	Select Id, Name, Salary From tblEmployee
+	Return
+End
+
+Select Name, Salary From fnGetEmployee2();
+/* you can update table from inline table function not from multi statement inline table fun*/
+
+
+-- Temporary Tables
+/*
+	Tables are in TempDB system Database
+	Types
+		1.Local Temporary Tables
+		2.Global Temporary Tables
+*/
+
+-- Local Temporary Table // just add # in front of the table name in create command
+/*
+	a local temp table is available only for the connection that has created the table
+*/
+Create Table #PersonalDeatails(Id int, Name nvarchar(10));
+
+Select Name from tempdb..sysobjects
+where Name like '#PersonalDeatails%'
+
+-- local temp table is automatically dropped
+-- you can also drop manually using drop command
+Drop Table #PersonalDeatails
+
+--Global Temporary Table  prefixed with ## 
+Create Table ##PersonDetails(Id int, Name nvarchar(10))
+/*
+	global temp tables are visible to all connection of the sql server
+	they are dropped only when the last connection is closed
+	global temp tables have unique name 
+*/
+
+--Indexes
+/*
+	are used by queries to find data from tables quickly.
+	created on tables and views.
+	Table scan without index is bad for performance
+*/
+
+--this query is takes time
+Select * From tblEmployee
+Where Salary > 60000 and Salary < 71000
+
+-- create index on salary column
+Create Index IX_tblEmployee_Salary
+On tblEmployee(Salary Asc)
+
+-- now because of index it will take less time
+Select * From tblEmployee
+Where Salary > 60000 and Salary < 71000
+
+sp_helpindex tblEmployee -- will return index on the table
+
+--provide table name and index name
+Drop Index tblEmployee.IX_tblEmployee_Salary
+
+/* Index Types
+	1.Clustered
+	2.NonClustered
+	3.Unique
+	4.Filtered
+	5.XML
+	6.Full Text
+	7.Spatial
+	8.Columnstore
+	9.Index with included columns
+	10.Index on Computed Columns
+
+*/
+-- Clustered and NonClustered Index
+--clustured index
+	-- a table can only have one clustered index
+	-- you can make it composite(with multiple columns)
+Create clustered Index IX_tblEmployee_Gender_Salary
+On tblEmployee(Gender DESC, Salary ASC)
+
+--Drop Index
+Drop Index tblEmployee.primarykeyindexname
+
+-- Nonclustered Index
+-- this index is saved separately from the table there is no restriction on number of nonclustered index
+Create Nonclustered IX_tablename_column
+On tablename(columnname ASC|DESC, ...)
+
+
+--clustered index is faster than nonclustered index
+
+-- Unique and Non Unique Index
+-- Unique index is used to enforce the	uniqueness of the key values in the index
+-- By default primary key constraint creates a unique clustered index
+-- Uniquness is property of index so both clustered and non clustered can be unique
+create unique nonclustered ix_tablename_column
+on tablename(columnname ASC|DESC,...)
+
+-- when you add unique constraint unique index gets added behind the scene
+
+
+-- Views
+-- a virtual table
+Select * From tblemp
+Select * From tblDepartment
+
+Select e.id, e.Name, e.Gender, e.Salary, d.DepartmentName
+From tblemp e
+Join tblDepartment d
+On e.DepartmentId = d.Id
+
+Create View vWEmployeesByDepartment
+as
+Select e.id, e.Name, e.Gender, e.Salary, d.DepartmentName
+From tblemp e
+Join tblDepartment d
+On e.DepartmentId = d.Id
+
+Select * From vWEmployeesByDepartment
+
+sp_helptext vWEmployeesByDepartment
+
+--Alter view statement for altering view defination
+-- Drop view viewname
+
+Drop View vWEmployeesByDepartment
+
+--Updateable Views
+
+Select * From tblEmployee
+
+Create view vWEmployeesDataExceptCity
+as
+Select Id, Name, Gender, Salary
+From tblEmployee
+
+Select * From vWEmployeesDataExceptCity
+
+Update vWEmployeesDataExceptCity
+Set Salary = 155000
+Where Name = 'John'
+-- update table using view possible? --> yes
+
+Insert Into vWEmployeesDataExceptCity values(41, 'Jenifer', 'Female', 45000)
+-- Insert data into table using views? --> Yes
+
+Delete from vWEmployeesDataExceptCity
+Where Id = 41
+-- Delete from table using views? --> Yes
+--All above was done on the view formed on a single table
+
+
+-- view using tblemp and tblDepartmet
+Create View vWEmployeesByDepartment
+as
+Select e.id, e.Name, e.Gender, e.Salary, d.DepartmentName
+From tblemp e
+Join tblDepartment d
+On e.DepartmentId = d.Id
+
+--as view is based on multiple tables it may not update the underlying
+--based tables correctly.
+
+-- Indexed Views
+-- view is just a virtual table wich does not stored any data, all data it retrieves from base tabes
+-- when index is created on views, the view get materialized means now it can store data.
+Create View ViewName
+with schemabinding
+as
+select_query
+-- use schemabinding option
+-- for aggregate function that may result in null value provide replacement value
+-- for using group by select must contain count_big(*)
+-- base table should be referenced with 2 part name
+-- ideal for olap system/datawarehouse
+
+
+--DML Triggers
+-- After Triggers/For Triggers
+-- Instead of triggers
+
+-- After Triggers
+create trigger tr_tablename_foraction
+on tablename
+for INSERT|DELETE|UPDATE
+As
+Begin
+	inserted | deleted -- two tables available only in triggers
+	--inserted when a insert statement is called
+	--deleted when a delete statement is called
+
+	--statement
+END
+
+
